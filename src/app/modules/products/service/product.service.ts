@@ -30,30 +30,25 @@ export class ProductService {
   }
   
   // Método para crear encabezados HTTP con el token y permisos
-  private getHeaders(isFormData: boolean = false): HttpHeaders {
+  private getHeaders(): HttpHeaders {
     // Obtener el token de manera segura
     const token = this.authservice.token || localStorage.getItem('token');
     
     if (!token) {
       console.warn('No hay token disponible');
-      const headersData: any = {};
-      if (!isFormData) {
-        headersData['Content-Type'] = 'application/json';
-      }
-      return new HttpHeaders(headersData);
+      return new HttpHeaders({
+        'Content-Type': 'application/json'
+      });
     }
     
     // Verificar si el servicio está listo
     if (!this.isServiceReady()) {
       console.warn('Servicio no está completamente inicializado, usando valores por defecto');
-      const headersData: any = {
+      return new HttpHeaders({
         'Authorization': 'Bearer ' + token,
-        'X-User-Permission': 'manage-own-products'
-      };
-      if (!isFormData) {
-        headersData['Content-Type'] = 'application/json';
-      }
-      return new HttpHeaders(headersData);
+        'X-User-Permission': 'manage-own-products',
+        'Content-Type': 'application/json'
+      });
     }
     
     // Determinar el permiso correcto a usar basado en los permisos actuales
@@ -71,14 +66,11 @@ export class ProductService {
     }
     
     // Crear headers con el permiso adecuado
-    const headersData: any = {
+    const headers = new HttpHeaders({
       'Authorization': 'Bearer ' + token,
-      'X-User-Permission': permissionToUse
-    };
-    if (!isFormData) {
-      headersData['Content-Type'] = 'application/json';
-    }
-    const headers = new HttpHeaders(headersData);
+      'X-User-Permission': permissionToUse,
+      'Content-Type': 'application/json'
+    });
     
     // Log seguro del token (solo primeros caracteres)
     const tokenPreview = token && token.length > 10 ? token.substring(0, 10) + '...' : 'token_corto';
@@ -136,7 +128,7 @@ export class ProductService {
 
   createProducts(data: any) {
     this.isLoadingSubject.next(true);
-    let headers = this.getHeaders(true);
+    let headers = this.getHeaders();
     let URL = URL_SERVICIOS + "/admin/products"; 
     
     console.log('Intentando crear producto con permiso:', headers.get('X-User-Permission'));
@@ -172,7 +164,7 @@ export class ProductService {
 
   updateProducts(product_id: string, data: any) {
     this.isLoadingSubject.next(true);
-    let headers = this.getHeaders(true);
+    let headers = this.getHeaders();
     let URL = URL_SERVICIOS + "/admin/products/" + product_id; 
     
     return this.http.post(URL, data, { headers: headers }).pipe(
@@ -200,7 +192,7 @@ export class ProductService {
 
   imagenAdd(data: any) {
     this.isLoadingSubject.next(true);
-    let headers = this.getHeaders(true);
+    let headers = this.getHeaders();
     let URL = URL_SERVICIOS + "/admin/products/imagens"; 
     
     return this.http.post(URL, data, { headers: headers }).pipe(
